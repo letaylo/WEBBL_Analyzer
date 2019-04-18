@@ -11,17 +11,17 @@ class Dwell:
 		self.end = end			#end time
 		self.dt = end-start		#dwell time
 		
-#Describes Down-Down feature of Keystroke dynamics
-class DD:
+#Describes Flight feature of Keystroke dynamics
+class Flight:
 	def __init__(self, key1, start1, key2, start2):
 		self.key1 = key1		#first key
 		self.start1 = start1	#first start
 		self.key2 = key2
 		self.start2 = start2
 		self.keys = key1 + key2	#Both letters combined
-		self.dt = start2-start1	#D-D latency
+		self.dt = start2-start1	#Flight latency
 
-#Provides a method to store Dwell and Down-Down Objects		
+#Provides a method to store Dwell and Flight Objects		
 class DwellDict:
 	def __init__(self):
 		self.dict = defaultdict(list)
@@ -30,13 +30,13 @@ class DwellDict:
 		self.dict.setdefault(dwellObj.key, [])			#initialize dictionary key
 		self.dict[dwellObj.key].append(dwellObj.dt)		#append to dictionary key
 	
-class DDDict:
+class FlightDict:
 	def __init__(self):
 		self.dict = defaultdict(list)
 		
-	def insert(self, ddObj):
-		self.dict.setdefault(ddObj.keys, [])	
-		self.dict[ddObj.keys].append(ddObj.dt)	
+	def insert(self, flightObj):
+		self.dict.setdefault(flightObj.keys, [])	
+		self.dict[flightObj.keys].append(flightObj.dt)	
 		
 #Describes info about keystrokes		
 class KeyAction:
@@ -57,7 +57,7 @@ ypos = []
 events = []
 keys = []
 keyActions = []
-dd = DDDict()
+flight = FlightDict()
 dwell = DwellDict()
 
 
@@ -83,21 +83,21 @@ for i in range(len(keyActions)):
 for i in range(len(keyActions)):
 	for j in range(i+1, len(keyActions)):
 		if (keyActions[i].key != keyActions[j].key) & (keyActions[i].action == 'd') & (keyActions[j].action == 'd'):
-			dd.insert(DD(keyActions[i].key, keyActions[i].time, keyActions[j].key, keyActions[j].time))
+			flight.insert(Flight(keyActions[i].key, keyActions[i].time, keyActions[j].key, keyActions[j].time))
 			break;
 	
 
 #Key Feature characteristics
 with open('key_features.csv', 'w') as csvFile:
 	csv_writer = csv.writer(csvFile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-	for i in dd.dict:
-		print(dd.dict[i])
-		mean = sum(dd.dict[i])/len(dd.dict[i])
+	for i in flight.dict:
+		print(flight.dict[i])
+		mean = sum(flight.dict[i])/len(flight.dict[i])
 		sd = 0
-		for j in dd.dict[i]:
+		for j in flight.dict[i]:
 			sd += (j - mean) ** 2
-		sd = math.sqrt(sd / len(dd.dict[i])
-		csv_writer.writerow([i, 'dd', max(dd.dict[i]), min(dd.dict[i]), max(dd.dict[i]) - min(dd.dict[i]), mean, sd])
+		sd = math.sqrt(sd / len(flight.dict[i])
+		csv_writer.writerow([i, 'flight', max(flight.dict[i]), min(flight.dict[i]), max(flight.dict[i]) - min(flight.dict[i]), mean, sd])
 	
 	for i in dwell.dict:
 		mean = sum(dwell.dict[i])/len(dwell.dict[i])
