@@ -32,3 +32,5 @@ _Figure 1_
 This data is stored by calling the Flight and Dwell Classes. These classes take basic keyAction data as inputs, and stores the key(s) as well as the start and end times of the action. For each key combination and action type, the mean, standard deviation, max, and min are stored as CSV for future analysis.
 
 Mouse feature extraction is a bit more complicated, as there are various action types (mouse movement, mousemove to click, etc.), as well as a set of 9 main types of features. In order to determine the type of action, the script iterates through the basic events, concatenating them together as long as they occur relatively recently to another. Each time a silence occurs or there is a new action, the type and start location of the action is stored. Then, using the mouse coordinates and timestamp, the features are calculated, as well as the min, max, mean, and standard deviation of each of those features during that action. This data is all written into CSV as well.
+
+_NOTE:_ feature_compare.py is only used as a proof of concept to visualize differences between users. Not to be used for actual analysis.
