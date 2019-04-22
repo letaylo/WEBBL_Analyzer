@@ -59,7 +59,7 @@ keys = []
 keyActions = []
 flight = FlightDict()
 dwell = DwellDict()
-
+keyLocs = []
 
 for row in csv_r:
 	xpos.append(int(row[0]))
@@ -72,23 +72,31 @@ for row in csv_r:
 for i in range(len(keys)):
 	if keys[i] != ':':
 		keyActions.append(KeyAction(keys[i],events[i],timestamp[i]))
+		keyLocs.append(i)
+keyLocs.reverse()
+for i in keyLocs:
+	del xpos[i]
+	del ypos[i]
+	del timestamp[i]
+	del events[i]
+	del keys[i]
 
 for i in range(len(keyActions)):
 	for j in range(i+1, len(keyActions)):
 		if (keyActions[i].key == keyActions[j].key) & (keyActions[i].action == 'd') & (keyActions[j].action == 'u'):
 			dwell.insert(Dwell(keyActions[i].key, keyActions[i].time, keyActions[j].time))
-			break;
+			break
 	
 	
 for i in range(len(keyActions)):
 	for j in range(i+1, len(keyActions)):
-		if (keyActions[i].key != keyActions[j].key) & (keyActions[i].action == 'd') & (keyActions[j].action == 'd'):
+		if ((keyActions[i].action == 'd') & (keyActions[j].action == 'd')):
 			flight.insert(Flight(keyActions[i].key, keyActions[i].time, keyActions[j].key, keyActions[j].time))
-			break;
+			break
 	
 
 #Key Feature characteristics
-with open('key_features.csv', 'w') as csvFile:
+with open('key_features.csv', 'w', newline = '') as csvFile:
 	csv_writer = csv.writer(csvFile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 	for i in flight.dict:
 		print(flight.dict[i])
@@ -96,7 +104,7 @@ with open('key_features.csv', 'w') as csvFile:
 		sd = 0
 		for j in flight.dict[i]:
 			sd += (j - mean) ** 2
-		sd = math.sqrt(sd / len(flight.dict[i])
+		sd = math.sqrt(sd / len(flight.dict[i]))
 		csv_writer.writerow([i, 'flight', max(flight.dict[i]), min(flight.dict[i]), max(flight.dict[i]) - min(flight.dict[i]), mean, sd])
 	
 	for i in dwell.dict:
@@ -104,11 +112,11 @@ with open('key_features.csv', 'w') as csvFile:
 		sd = 0
 		for j in dwell.dict[i]:
 			sd += (j - mean) ** 2
-		sd = math.sqrt(sd / len(dwell.dict[i])
+		sd = math.sqrt(sd / len(dwell.dict[i]))
 		csv_writer.writerow([i, 'dwell', max(dwell.dict[i]), min(dwell.dict[i]), max(dwell.dict[i]) - min(dwell.dict[i]), mean, sd])	
 	
 #useful to have
-size = len(entry_id)
+size = len(xpos)
 
 #Feature vector arrays(mouse): angle, angular velocity, curvature, curvature change rate, x/y velocity, speed, acceleration, jerk 
 dt = [0]
@@ -131,16 +139,6 @@ a = [0]
 jerk = [0]
 
 #Mouse Feature characteristics
-#x_min = xpos[0]
-#x_max = xpos[0]
-#x_mean = [0]
-#x_sd = [0]
-#x_minmax = [0]
-#y_min = ypos[0]
-#y_max = ypos[0]
-#y_mean = [0]
-#y_sd = [0]
-#y_minmax = [0]
 dy_temp = int(ypos[1]) - int(ypos[0])
 dx_temp = int(xpos[1]) - int(xpos[0])
 dt_temp = timestamp[1] - timestamp[0]
@@ -191,7 +189,6 @@ jerk_sd = [0]
 jerk_minmax = [0]
 
 total_distance = [0]
-#total_time = timestamp[size-1]
 critical_points = [0]
 straightness = [0]
 jitter = [0]
@@ -201,8 +198,7 @@ events_complex = [] #holds complex  events
 event = 0	#temporary holder
 silence = [] #length of each silence
 silence_locations = [] #locations of each silence
-#mouse_event = []
-#extracts features
+
 
 #Everything that comes after here is pretty ugly code, but I don't have the time to refactor. Sorry -\_(*<*)_/-
 #Basically, we calculate each of the features from Feher. et al, as well as their min, max, max-min, SD, and mean
@@ -214,7 +210,7 @@ for i in range(size - 1):
 		
 		
 		
-	#determines events
+	#determines action types
 	if events[i+1] == "ld":
 		strokes += 1	
 		event = "ld"
@@ -254,10 +250,11 @@ for i in range(size - 1):
 			if events[i+2] == "ld" :
 				events_complex.append(event)
 				event = 0
-			
+	#store event		
 	if i == size-2 :
 		events_complex.append(event)
 	
+	#initialize features
 	if dt[i+1] > 50 :
 		angle.append(0)
 		angle_v.append(0)
@@ -283,56 +280,50 @@ for i in range(size - 1):
 		#else :
 		
 	if dt[i+1] <= 50 :
+		#calculate dx, dy, and total distance travelled
 		dx.append(xpos[i+1] - xpos[i])
-		#if xpos[i+1] < x_min :
-		#	x_min = xpos[i+1]
-		#	elif xpos[1] > x_max :
-		#	x_max = xpos[i+1]
-		#x_mean += xpos[i+1]
 
 		dy.append(ypos[i+1] - ypos[i])
-		#if ypos[i+1] < y_min :
-		#	y_min = ypos[i+1]
-		#elif ypos[i+1] > y_max :
-		#	y_max = ypos[i+1]
-		#y_mean += ypos[i+1]
 
-		ds.append(math.sqrt((dy[i+1] ** 2) + (dx[i+1] ** 2))) #
-		
-	
+		ds.append(math.sqrt((dy[i+1] ** 2) + (dx[i+1] ** 2))) #		
+
+		#angle of movement
 		angle.append(math.atan2(dy[i+1],dx[i+1])) #
 
+		#angular velocity
 		angle_v.append((angle[i+1] - angle[i]) / dt[i+1])
 		
-		
+		#curvature
 		if ds[i+1] == 0 :
 			curve.append(0)
 		else :
 			curve.append((angle[i+1] - angle[i]) / ds[i+1])
 			
-
+		#curvature change rate
 		if ds[i+1] == 0 :
 			curve_r.append(0)
 		else :
 			curve_r.append((curve[i+1] - curve[i]) / ds[i+1])
 			
-
+		#x velocity
 		vx.append(dx[i+1] / dt[i+1])
 		
-	
+		#y velocity
 		vy.append(dy[i+1] / dt[i+1])
 		
-
+		# speed
 		v.append(ds[i+1] / dt[i+1])
 		
 		dvx.append(vx[i+1] - vx[i])
 		dvy.append(vy[i+1] - vy[i])
 		dv.append(math.fabs(v[i+1] - vy[i]))
 
+		#acceleration
 		a.append(dv[i+1] / dt[i+1])
-		
+		#jerk
 		jerk.append((a[i+1] - a[i]) / dt[i+1])
-		
+
+#number of actions	
 strokes += 1
 stroke_locations.append(size-1)
 #Initial Feature Analysis, broken up by strokes
@@ -342,6 +333,7 @@ for j in range(strokes - 1) :
 	cur_loc = stroke_locations[j] #current stroke loc
 	cur_size = loc - cur_loc		#size of current stroke
 	if j != 0 :
+		#initialize values
 		dy_temp = int(ypos[cur_loc + 1]) - int(ypos[cur_loc])
 		dx_temp = int(xpos[cur_loc + 1]) - int(xpos[cur_loc])
 		dt_temp = timestamp[cur_loc + 1] - timestamp[cur_loc]
@@ -456,13 +448,8 @@ for j in range(strokes - 1) :
 		
 		total_distance[j] += ds[i+1]
 		
-	#x_mean[j] = x_mean[j]/(cur_size - 1)
-	#x_minmax[j] = x_max[j] - x_min[j]
-
-	#y_mean[j] = y_mean[j]/(cur_size - 1)
-	#y_minmax[j] = y_max[j] - y_min[j]
 	
-	#Compute minmax and mean
+	#Compute max-min and mean
 	angle_mean[j] = angle_mean[j]/(cur_size)
 	angle_minmax[j] = angle_max[j] - angle_min[j]
 
@@ -492,13 +479,13 @@ for j in range(strokes - 1) :
 	total_dx = xpos[loc] - xpos[cur_loc]
 	total_dy = ypos[loc] - ypos[cur_loc]
 	
-	straightness[j] = math.sqrt((total_dx ** 2) + (total_dy ** 2))/total_distance[j]
+	if total_distance[j] != 0:
+		straightness[j] = math.sqrt((total_dx ** 2) + (total_dy ** 2))/total_distance[j]
+	else:
+		straightness[j] = 0
 
 	#Compute Standard Deviation
 	for i in range (cur_size) :
-		#x_sd += ((xpos[i+1] - x_mean) ** 2)
-		#y_sd += ((ypos[i+1] - y_mean) ** 2)
-		#changing next spot from size to loc
 		angle_sd[j] += ((angle[i+cur_loc] - angle_mean[j]) ** 2)
 		angle_v_sd[j] += ((angle_v[i+cur_loc] - angle_v_mean[j]) ** 2)
 		curve_sd[j] += ((curve[i+cur_loc] - curve_mean[j]) ** 2)
@@ -509,8 +496,7 @@ for j in range(strokes - 1) :
 		a_sd[j] += ((a[i+cur_loc] - a_mean[j]) ** 2)
 		jerk_sd[j] += ((jerk[i+cur_loc] - jerk_mean[j]) ** 2)
 	
-	#x_sd[j] = math.sqrt(x_sd/(size-1))
-	#y_sd[j] = math.sqrt(y_sd/(size-1))
+	
 	angle_sd[j] = math.sqrt(angle_sd[j]/(cur_size))
 	angle_v_sd[j] = math.sqrt(angle_v_sd[j]/(cur_size))
 	curve_sd[j] = math.sqrt(curve_sd[j]/(cur_size))
@@ -522,7 +508,7 @@ for j in range(strokes - 1) :
 	jerk_sd[j] = math.sqrt(jerk_sd[j]/(cur_size))
 	
 # write features to output file
-with open('mouse_features.csv', 'w') as csvfile:
+with open('mouse_features.csv', 'w', newline = '') as csvfile:
 	writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 	for j in range(strokes-1) :
 		writer.writerow([events_complex[j], critical_points[j], straightness[j], total_distance[j],
@@ -535,6 +521,3 @@ with open('mouse_features.csv', 'w') as csvfile:
 						v_max[j], v_min[j], v_minmax[j], v_mean[j], v_sd[j], 
 						a_max[j], a_min[j], a_minmax[j], a_mean[j], a_sd[j], 
 						jerk_max[j], jerk_min[j], jerk_minmax[j], jerk_mean[j], jerk_sd[j]])
-
-	
-#main()
