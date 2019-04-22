@@ -291,7 +291,10 @@ for i in range(size - 1):
 		angle.append(math.atan2(dy[i+1],dx[i+1])) #
 
 		#angular velocity
-		angle_v.append((angle[i+1] - angle[i]) / dt[i+1])
+		if dt[i+1] != 0:
+			angle_v.append((angle[i+1] - angle[i]) / dt[i+1])
+		else:
+			angle_v.append(0)
 		
 		#curvature
 		if ds[i+1] == 0 :
@@ -305,23 +308,33 @@ for i in range(size - 1):
 		else :
 			curve_r.append((curve[i+1] - curve[i]) / ds[i+1])
 			
-		#x velocity
-		vx.append(dx[i+1] / dt[i+1])
+			
+		if dt[i+1] != 0:
+			#x velocity
+			vx.append(dx[i+1] / dt[i+1])
 		
-		#y velocity
-		vy.append(dy[i+1] / dt[i+1])
+			#y velocity
+			vy.append(dy[i+1] / dt[i+1])
 		
-		# speed
-		v.append(ds[i+1] / dt[i+1])
+			# speed
+			v.append(ds[i+1] / dt[i+1])
+		else:
+			vx.append(0)
+			vy.append(0)
+			v.append(0)
 		
 		dvx.append(vx[i+1] - vx[i])
 		dvy.append(vy[i+1] - vy[i])
 		dv.append(math.fabs(v[i+1] - vy[i]))
 
-		#acceleration
-		a.append(dv[i+1] / dt[i+1])
-		#jerk
-		jerk.append((a[i+1] - a[i]) / dt[i+1])
+		if dt[i+1] != 0:
+			#acceleration
+			a.append(dv[i+1] / dt[i+1])
+			#jerk
+			jerk.append((a[i+1] - a[i]) / dt[i+1])
+		else:
+			a.append(0)
+			jerk.append(0)
 
 #number of actions	
 strokes += 1
