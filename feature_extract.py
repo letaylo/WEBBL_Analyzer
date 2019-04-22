@@ -138,7 +138,7 @@ dv = [0]
 a = [0]
 jerk = [0]
 
-#Mouse Feature characteristics
+#Mouse Feature characteristics; min, max, max-min, mean, sd for each action's features
 dy_temp = int(ypos[1]) - int(ypos[0])
 dx_temp = int(xpos[1]) - int(xpos[0])
 dt_temp = timestamp[1] - timestamp[0]

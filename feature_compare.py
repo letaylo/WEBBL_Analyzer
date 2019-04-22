@@ -5,7 +5,7 @@ import csv
 
 def keyCompare(ffile, person, key, action):
     r = open(ffile)
-    csv_r = csv.reader(r)
+    csv_r = csv.reader(r) 
     if person == '1':
         c = 'r'
     elif person == '2':
@@ -40,33 +40,33 @@ def mouseCompare(ffile, person, action, feature):
             sigma = float(row[5*feature + 4])
             x = np.linspace(start,end, 5000)
             y = ss.norm.pdf(x, mu, sigma)
-            plt.plot(x, y, color = c, label='subject'+person)
-            
+            plt.plot(x, y, color=c, label='subject'+person)            
 
 
-
+dataList = ["_l1", "_l2", "_l3", "_l4", "_l5", "_l6", "_l7", "_l8", "_l9", "_l10", "_b1", "_b2", "_b3", "_b4", "_b5", "_b6", "_b7", "_b8", "_b9", "_b10"]
 cont = True
 ftype = input("(k/m)?: ")
 plt.style.use('seaborn') # pretty matplotlib plots
 
 if ftype == "k":
-    action = input("(d/f)?: ")
+    action = input("(dwell/flight)?: ")
     key = input("Key(s)?: ")
     plt.title(key + action + " Comparison")
 elif ftype == "m":
     action = input("Mouse action?: ")
-    feature = int(input("Mouse movement feature?: "))
+    feature = int(input("Mouse movement feature? (0-8): "))
     plt.title(action + str(feature) + " Comparison")
-
-while cont:    
-    ffile = input("filename?: ")
-    person = input("Subject?: ")
+iterator = 0
+for data in dataList:    
+    #ffile = input("filename?: ")
+    person = '1' if iterator < 10 else '2'
 
     if ftype == "k":
-        keyCompare(ffile, person, key, action)
+        keyCompare("key_features" + data + ".csv", person, key, action)
     elif ftype == "m":
-        mouseCompare(ffile, person, action, feature)
-    cont = True if input("Continue? (y/n): ") == "y" else False
+        mouseCompare("mouse_features" + data + ".csv", person, action, feature)
+    iterator += 1
+    #cont = True if input("Continue? (y/n): ") == "y" else False
 
 handles, labels = plt.gca().get_legend_handles_labels()
 newLabels, newHandles = [], []
